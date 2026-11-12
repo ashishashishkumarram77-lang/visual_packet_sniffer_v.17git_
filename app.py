@@ -11,6 +11,7 @@ import errno
 import hashlib
 import io
 import json
+import logging
 import os
 import platform
 import random
@@ -38,6 +39,7 @@ except ImportError:
     SCAPY_AVAILABLE = False
 
 app = Flask(__name__)
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 
 @app.after_request
@@ -56,9 +58,9 @@ COMPLAINTS_FILE = os.path.join(BASE_DIR, "complaints_history.json")
 
 HOSTNAME = socket.gethostname()
 
-# 2-Minute (120s) Rolling Window + 15-Second Periodic Prune Cycle
-RETENTION_WINDOW_SECONDS = 120
-PRUNE_INTERVAL_SECONDS = 15
+# 1-Minute (60s) Rolling Window — Auto-deletes packets older than 60 seconds
+RETENTION_WINDOW_SECONDS = 60
+PRUNE_INTERVAL_SECONDS = 5
 MAX_PACKETS = 1500
 BANDWIDTH_WINDOW_SECONDS = 30
 
@@ -231,7 +233,7 @@ init_ip, init_online = get_active_local_ip()
 capture_state = {
     "running": True,
     "network_online": init_online,
-    "capture_engine": "Hybrid Real Packet & OS Socket Engine (2-Min Rolling Buffer)",
+    "capture_engine": "Hybrid Real Packet & OS Socket Engine",
     "local_ip": init_ip,
     "hostname": HOSTNAME,
     "packet_counter": 0,
@@ -1311,12 +1313,27 @@ def api_employees():
             conn.close()
             return jsonify({"error": "Password must be at least 8 characters long"}), 400
 
-        cur.execute("SELECT COUNT(*) FROM employees_users")
-        next_num = 100 + cur.fetchone()[0] + 1
+        cur.execute("SELECT username FROM employees_users WHERE LOWER(TRIM(username))=LOWER(TRIM(?))", (username,))
+        if cur.fetchone():
+            conn.close()
+            return jsonify({"error": f"Username '{username}' already exists! Please choose a unique Username."}), 400
+
+        cur.execute("SELECT emp_id FROM employees_users")
+        existing_ids = [r[0] for r in cur.fetchall()]
+        max_num = 100
+        for eid in existing_ids:
+            m = re.search(r"(\d+)", str(eid))
+            if m:
+                max_num = max(max_num, int(m.group(1)))
+        next_num = max_num + 1
         emp_id = f"EMP-{next_num}"
+        while emp_id in existing_ids:
+            next_num += 1
+            emp_id = f"EMP-{next_num}"
+
         pw_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
         cur.execute(
-            "INSERT OR REPLACE INTO employees_users VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO employees_users (emp_id, username, password_hash, plain_preview, full_name, role, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
             (emp_id, username, pw_hash, password, full_name, role, datetime.now().strftime("%I:%M %p")),
         )
         conn.commit()

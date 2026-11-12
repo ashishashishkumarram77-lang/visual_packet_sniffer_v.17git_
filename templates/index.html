@@ -193,12 +193,9 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-          <button id="btnToggleTrafficScope" type="button" onclick="toggleTrafficScopeMode()" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30 hover:bg-sky-500/25 transition mono" title="Switch between This Device's Own Traffic and Host Server Traffic">
-            📱 Scope: My Device Traffic
+          <button id="btnToggleTrafficScope" type="button" onclick="toggleTrafficScopeMode()" class="hidden px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30 hover:bg-sky-500/25 transition mono" title="Admin Only: Switch between My Device Traffic and Host Server Traffic">
+            📱 View: My Device Traffic (Click for Host Server)
           </button>
-          <span id="retentionTimerBadge" class="text-[11px] text-emerald-300 mono px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 font-semibold">
-            ⏱️ 2m Buffer • 15s Clean: 15s
-          </span>
           <span id="captureEngineText" class="text-xs text-slate-400 mono px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 max-w-xs truncate">
             Engine: Real Network Monitor
           </span>
@@ -269,28 +266,28 @@
           </div>
         </div>
 
-        <!-- Box 3: Captured Packets -->
-        <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 shadow flex flex-col justify-between">
+        <!-- Box 3: Captured Packets (Auto Scales: Count -> K -> Million -> Billion) -->
+        <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 shadow flex flex-col justify-between min-w-0 overflow-hidden">
           <div class="flex items-center justify-between text-xs text-slate-400">
             <span>CAPTURED PACKETS</span>
-            <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 mono">Real Sniff</span>
+            <span id="kpiPacketScaleTag" class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 mono text-[10px]">1K / M / B</span>
           </div>
-          <div class="mt-2 flex items-baseline gap-2">
+          <div class="mt-2 flex items-baseline gap-1.5 flex-wrap">
             <span id="kpiTotalPackets" class="text-2xl sm:text-3xl font-bold text-white mono">0</span>
-            <span class="text-xs font-semibold text-indigo-400">pkts</span>
+            <span id="kpiTotalPacketsUnit" class="text-xs font-semibold text-indigo-400">pkts</span>
           </div>
           <p class="mt-1 text-xs text-slate-400">Current rate: <span id="kpiPacketRate" class="text-slate-200 mono font-medium">0 pkts/s</span></p>
         </div>
 
-        <!-- Box 4: Data Transferred -->
-        <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 shadow flex flex-col justify-between">
+        <!-- Box 4: Data Transferred (Auto Scales: KB -> MB -> GB -> TB) -->
+        <div class="bg-[#111827] border border-slate-800 rounded-2xl p-4 shadow flex flex-col justify-between min-w-0 overflow-hidden">
           <div class="flex items-center justify-between text-xs text-slate-400">
             <span>DATA TRANSFERRED</span>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 mono">Cumulative</span>
+            <span id="kpiVolumeScaleTag" class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 mono text-[10px]">KB/MB/GB/TB</span>
           </div>
-          <div class="mt-2 flex items-baseline gap-2">
-            <span id="kpiTotalVolume" class="text-2xl sm:text-3xl font-bold text-white mono">0.0</span>
-            <span class="text-xs font-semibold text-emerald-400">KB</span>
+          <div class="mt-2 flex items-baseline gap-1.5 flex-wrap">
+            <span id="kpiTotalVolume" class="text-2xl sm:text-3xl font-bold text-white mono">0.00</span>
+            <span id="kpiTotalVolumeUnit" class="text-xs font-bold text-emerald-400 mono">KB</span>
           </div>
           <p class="mt-1 text-xs text-slate-400">Avg packet size: <span id="kpiAvgSize" class="text-slate-200 mono font-medium">0 B</span></p>
         </div>
@@ -367,7 +364,7 @@
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div class="min-w-0">
               <h3 class="text-sm font-semibold text-white">Top Source IP &amp; Domain (Senders)</h3>
-              <p class="text-xs text-slate-400">Real sender IPs with resolved domain/hostnames (2-Min Window)</p>
+              <p class="text-xs text-slate-400">Real sender IPs with resolved domain/hostnames (1-Min Live Window)</p>
             </div>
             <span class="text-xs px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 mono shrink-0">IP.src + Domain</span>
           </div>
@@ -378,7 +375,7 @@
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div class="min-w-0">
               <h3 class="text-sm font-semibold text-white">Top Destination IP &amp; Domain (Receivers)</h3>
-              <p class="text-xs text-slate-400">Real receiver IPs with resolved domain/hostnames (2-Min Window)</p>
+              <p class="text-xs text-slate-400">Real receiver IPs with resolved domain/hostnames (1-Min Live Window)</p>
             </div>
             <span class="text-xs px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 mono shrink-0">IP.dst + Domain</span>
           </div>
@@ -391,8 +388,8 @@
         <div class="lg:col-span-2 bg-[#111827] border border-slate-800 rounded-2xl p-4 shadow flex flex-col">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div>
-              <h2 class="text-sm sm:text-base font-semibold text-white">Live Captured Packet Stream</h2>
-              <p class="text-xs text-slate-400">Click any captured packet row to inspect OSI Layer headers &amp; Hex dump</p>
+              <h2 class="text-sm sm:text-base font-semibold text-white">Live Captured Packet Stream (Last 1 Minute Scrollable)</h2>
+              <p class="text-xs text-slate-400">Scroll to view the last 1 minute of packets (older packets auto-delete) • Click any row for OSI &amp; Hex inspection</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-1">
@@ -690,9 +687,7 @@
             Generate unique 8+ character random passwords and department credentials for authorized employees.
           </p>
         </div>
-        <button id="btnLockScreenTest" type="button" onclick="logoutEmployeeSession()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs sm:text-sm transition shadow">
-          🔒 Lock &amp; Test Employee Login Page
-        </button>
+
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
@@ -782,8 +777,8 @@
       ICMP: '#fb7185'
     };
 
-    const RETENTION_WINDOW_MS = 120 * 1000; // 2 Minutes (120 seconds)
-    const PRUNE_INTERVAL_SEC = 15;          // Prune old packets every 15 seconds
+    const RETENTION_WINDOW_MS = 60 * 1000;  // 1 Minute (60 seconds) scrollable window
+    const PRUNE_INTERVAL_SEC = 5;           // Auto-delete packets older than 1 minute every 5 seconds
 
     const IS_HTTP_SERVER = (window.location.protocol === 'http:' || window.location.protocol === 'https:') &&
       !window.location.hostname.includes('googleusercontent.com') &&
@@ -888,6 +883,63 @@
       if (low.startsWith('fe80:')) return 'ipv6-link.local (Device IPv6)';
       if (s.includes(':')) return 'ipv6-host.net (Public IPv6)';
       return 'internet-endpoint.net';
+    }
+
+    function formatPacketCountOrder(count) {
+      const n = Number(count) || 0;
+      if (n >= 1000000000) {
+        return { num: (n / 1000000000).toFixed(2), unit: 'Billion pkts', tag: 'Billion (B)' };
+      }
+      if (n >= 1000000) {
+        return { num: (n / 1000000).toFixed(2), unit: 'Million pkts', tag: 'Million (M)' };
+      }
+      if (n >= 1000) {
+        return { num: (n / 1000).toFixed(2) + ' K', unit: 'pkts', tag: 'Thousand (1K+)' };
+      }
+      return { num: String(n), unit: 'pkts', tag: '1K / M / B' };
+    }
+
+    function formatDataVolumeSeries(bytesVal) {
+      const b = Math.max(0, Number(bytesVal) || 0);
+      const kb = b / 1024;
+      if (kb < 1024) {
+        return { num: kb.toFixed(2), unit: 'KB', text: kb.toFixed(2) + ' KB' };
+      }
+      const mb = kb / 1024;
+      if (mb < 1024) {
+        return { num: mb.toFixed(2), unit: 'MB', text: mb.toFixed(2) + ' MB' };
+      }
+      const gb = mb / 1024;
+      if (gb < 1024) {
+        return { num: gb.toFixed(2), unit: 'GB', text: gb.toFixed(2) + ' GB' };
+      }
+      const tb = gb / 1024;
+      return { num: tb.toFixed(2), unit: 'TB', text: tb.toFixed(2) + ' TB' };
+    }
+
+    function updatePacketAndVolumeKpis(totalPackets, totalBytes, downBytes, upBytes) {
+      const pktFmt = formatPacketCountOrder(totalPackets);
+      const pktEl = document.getElementById('kpiTotalPackets');
+      const pktUnitEl = document.getElementById('kpiTotalPacketsUnit');
+      const pktTagEl = document.getElementById('kpiPacketScaleTag');
+      if (pktEl) pktEl.textContent = pktFmt.num;
+      if (pktUnitEl) pktUnitEl.textContent = pktFmt.unit;
+      if (pktTagEl) pktTagEl.textContent = pktFmt.tag;
+
+      const volFmt = formatDataVolumeSeries(totalBytes);
+      const volEl = document.getElementById('kpiTotalVolume');
+      const volUnitEl = document.getElementById('kpiTotalVolumeUnit');
+      const volTagEl = document.getElementById('kpiVolumeScaleTag');
+      if (volEl) volEl.textContent = volFmt.num;
+      if (volUnitEl) volUnitEl.textContent = volFmt.unit;
+      if (volTagEl) volTagEl.textContent = volFmt.unit + ' Series';
+
+      const dFmt = formatDataVolumeSeries(downBytes);
+      const uFmt = formatDataVolumeSeries(upBytes);
+      const sumEl = document.getElementById('speedTestTotalTransferred');
+      if (sumEl) {
+        sumEl.textContent = `Σ↓ ${dFmt.text} | Σ↑ ${uFmt.text}`;
+      }
     }
 
     function setDeviceIpBoxUI(ipStr, domainLabel) {
@@ -1233,19 +1285,37 @@
       } catch (e) {}
     }
 
-    function toggleTrafficScopeMode() {
-      state.trafficScope = (state.trafficScope === 'device') ? 'global' : 'device';
+    function updateTrafficScopeButtonUI() {
       const btn = document.getElementById('btnToggleTrafficScope');
-      if (btn) {
-        if (state.trafficScope === 'device') {
-          btn.textContent = '📱 Scope: My Device Traffic';
-          btn.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30 hover:bg-sky-500/25 transition mono';
-          showToast('Showing live traffic & protocols for YOUR logged-in device only');
-        } else {
-          btn.textContent = '🖥️ Scope: Host Server Traffic';
-          btn.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition mono';
-          showToast('Showing global traffic & protocols from Host Server');
-        }
+      if (!btn) return;
+      if (!currentUser || !currentUser.isAdmin) {
+        state.trafficScope = 'device';
+        btn.classList.add('hidden');
+        btn.style.display = 'none';
+        return;
+      }
+      btn.classList.remove('hidden');
+      btn.style.display = 'inline-flex';
+      if (state.trafficScope === 'device') {
+        btn.textContent = '📱 View: My Device Traffic (Click for Host Server)';
+        btn.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30 hover:bg-sky-500/25 transition mono';
+      } else {
+        btn.textContent = '🖥️ View: Host Server Traffic (Admin Mode)';
+        btn.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition mono';
+      }
+    }
+
+    function toggleTrafficScopeMode() {
+      if (!currentUser || !currentUser.isAdmin) {
+        state.trafficScope = 'device';
+        return;
+      }
+      state.trafficScope = (state.trafficScope === 'device') ? 'global' : 'device';
+      updateTrafficScopeButtonUI();
+      if (state.trafficScope === 'device') {
+        showToast('Showing live traffic & protocols for YOUR device');
+      } else {
+        showToast('Admin Mode: Showing Host Server traffic & protocols');
       }
       pollRealBackendOrBrowser();
     }
@@ -1336,7 +1406,7 @@
       const draw = (items, containerId, barColor, badgeColor) => {
         const el = document.getElementById(containerId);
         if (!items || !items.length) {
-          el.innerHTML = `<div class="text-slate-500 py-2">No active traffic recorded in current 2-minute window yet.</div>`;
+          el.innerHTML = `<div class="text-slate-500 py-2">No active traffic recorded in current 1-minute window yet.</div>`;
           return;
         }
         const maxB = items[0].bytes || 1;
@@ -1349,7 +1419,7 @@
                 <span class="mono font-bold text-slate-100 ip-box-safe">${x.ip}</span>
                 <span class="px-2 py-0.5 rounded-md ${badgeColor} text-[10px] font-semibold mono truncate max-w-[220px]">🌐 ${domainName}</span>
               </div>
-              <span class="mono text-slate-300 font-semibold shrink-0">${(x.bytes / 1024).toFixed(2)} KB</span>
+              <span class="mono text-slate-300 font-semibold shrink-0">${formatDataVolumeSeries(x.bytes).text}</span>
             </div>
             <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
               <div class="h-full ${barColor} rounded-full" style="width: ${pct}%"></div>
@@ -1430,18 +1500,13 @@
             renderDeviceMonitor();
           }
 
-          // 2. Update 2-Minute Retention & 15s Cleanup Badge
-          const retBadge = document.getElementById('retentionTimerBadge');
-          if (retBadge && d.next_prune_in_sec !== undefined) {
-            retBadge.textContent = `⏱️ 2m Buffer (${d.active_window_packets || (d.packets ? d.packets.length : 0)} pkts) • 15s Clean: ${d.next_prune_in_sec}s`;
-          }
-
-          // 3. Render Per-Device (or Selected Scope) Traffic, IP Box, Domains & Protocols
+          // 2. Render Per-Device (or Admin Host Scope) Traffic, IP Box, Domains & Protocols
+          const effectiveScope = (currentUser && currentUser.isAdmin) ? state.trafficScope : 'device';
           updateNetworkOnlineBanner(Boolean(d.network_online));
           document.getElementById('captureEngineText').textContent = `Engine: ${d.capture_engine}`;
-          const myShownIp = (state.trafficScope === 'device' && !d.is_host_client) ? (d.client_ip || d.local_ip) : (d.is_host_client ? d.local_ip : d.client_ip);
+          const myShownIp = (effectiveScope === 'device' && !d.is_host_client) ? (d.client_ip || d.local_ip) : (d.is_host_client ? d.local_ip : d.client_ip);
           document.getElementById('hostSubHeader').textContent =
-            `Device IP: ${myShownIp} | Host: ${d.hostname} | 2-Min Rolling Buffer (15s Prune)`;
+            `Active Device IP: ${myShownIp} | Central Server: ${d.hostname}`;
           setDeviceIpBoxUI(myShownIp, d.client_domain || resolveIpDomainClient(myShownIp));
 
           const curKbps = d.network_online && d.running ? d.current_kbps : 0.0;
@@ -1453,14 +1518,11 @@
           document.getElementById('kpiLiveDownKbps').textContent = downKbps.toFixed(2);
           document.getElementById('kpiLiveUpKbps').textContent = upKbps.toFixed(2);
           document.getElementById('kpiPeakBandwidth').textContent = d.peak_kbps.toFixed(2) + ' KB/s';
-          document.getElementById('kpiTotalPackets').textContent = d.total_packets.toLocaleString();
           document.getElementById('kpiPacketRate').textContent = `${pps} pkts/s`;
-          document.getElementById('kpiTotalVolume').textContent = (d.total_bytes / 1024).toFixed(1);
+          updatePacketAndVolumeKpis(d.total_packets, d.total_bytes, d.total_down_bytes, d.total_up_bytes);
           const avgB = d.total_packets > 0 ? Math.round(d.total_bytes / d.total_packets) : 0;
           document.getElementById('kpiAvgSize').textContent = `${avgB} B`;
           document.getElementById('kpiUniqueIps').textContent = `${d.unique_hosts} hosts`;
-          document.getElementById('speedTestTotalTransferred').textContent =
-            `Σ↓ ${(d.total_down_bytes / 1024).toFixed(0)} KB | Σ↑ ${(d.total_up_bytes / 1024).toFixed(0)} KB`;
 
           state.protoCounts = d.protocol_counts || state.protoCounts;
           state.packets = d.packets || [];
@@ -1518,15 +1580,12 @@
         document.getElementById('kpiLiveDownKbps').textContent = downKbps.toFixed(2);
         document.getElementById('kpiLiveUpKbps').textContent = upKbps.toFixed(2);
         document.getElementById('kpiPeakBandwidth').textContent = state.peakKbps.toFixed(2) + ' KB/s';
-        document.getElementById('kpiTotalPackets').textContent = state.packetSeq.toLocaleString();
         document.getElementById('kpiPacketRate').textContent = `${pps} pkts/s`;
-        document.getElementById('kpiTotalVolume').textContent = (state.totalBytes / 1024).toFixed(1);
+        updatePacketAndVolumeKpis(state.packetSeq, state.totalBytes, state.totalDownBytes, state.totalUpBytes);
         const avgSize = state.packetSeq > 0 ? Math.round(state.totalBytes / state.packetSeq) : 0;
         document.getElementById('kpiAvgSize').textContent = `${avgSize} B`;
         const uniqueHosts = new Set([...Object.keys(state.srcIpBytes), ...Object.keys(state.dstIpBytes)]).size;
         document.getElementById('kpiUniqueIps').textContent = `${uniqueHosts} hosts`;
-        document.getElementById('speedTestTotalTransferred').textContent =
-          `Σ↓ ${(state.totalDownBytes / 1024).toFixed(0)} KB | Σ↑ ${(state.totalUpBytes / 1024).toFixed(0)} KB`;
 
         if (bwChart) {
           const nowStr = new Date().toTimeString().split(' ')[0];
@@ -1738,9 +1797,8 @@
       document.getElementById('kpiLiveDownKbps').textContent = '0.00';
       document.getElementById('kpiLiveUpKbps').textContent = '0.00';
       document.getElementById('kpiPeakBandwidth').textContent = '0.00 KB/s';
-      document.getElementById('kpiTotalPackets').textContent = '0';
+      updatePacketAndVolumeKpis(0, 0, 0, 0);
       document.getElementById('kpiPacketRate').textContent = '0 pkts/s';
-      document.getElementById('kpiTotalVolume').textContent = '0.0';
       document.getElementById('kpiAvgSize').textContent = '0 B';
       document.getElementById('kpiUniqueIps').textContent = '0 hosts';
 
@@ -2437,7 +2495,7 @@
 
         if (currentUser.isAdmin && API_ORIGIN) {
           fetch(API_ORIGIN + '/api/employees').then(r => r.json()).then(ed => {
-            if (ed.employees) { departmentEmployees = ed.employees; renderEmployeeAccountsList(); }
+            if (ed.employees) { departmentEmployees = ed.employees; saveEmployeesToStorage(); renderEmployeeAccountsList(); }
           }).catch(() => {});
         }
         return true;
@@ -2461,6 +2519,7 @@
         if (empNotice) empNotice.classList.add('hidden');
         if (userBadge) userBadge.textContent = `${currentUser.username} (ADMIN — ${currentUser.dept || 'IT Dept'})`;
       } else {
+        state.trafficScope = 'device';
         if (!preserveCurrentTab || state.activeTab === 'database') {
           switchMainTab('dashboard');
         }
@@ -2472,6 +2531,7 @@
         if (empNotice) empNotice.classList.remove('hidden');
         if (userBadge) userBadge.textContent = `${currentUser.username} (EMPLOYEE — ${currentUser.dept || 'Network Dept'})`;
       }
+      updateTrafficScopeButtonUI();
     }
 
     function toggleLoginPasswordVisibility() {
@@ -2598,7 +2658,7 @@
             switchMainTab(state.activeTab || 'dashboard');
             if (isAdm && API_ORIGIN) {
               fetch(API_ORIGIN + '/api/employees').then(r => r.json()).then(ed => {
-                if (ed.employees) { departmentEmployees = ed.employees; renderEmployeeAccountsList(); }
+                if (ed.employees) { departmentEmployees = ed.employees; saveEmployeesToStorage(); renderEmployeeAccountsList(); }
               }).catch(() => {});
             }
             if (bwChart) bwChart.resize();
@@ -2697,6 +2757,7 @@
         return;
       }
 
+      let savedViaApi = false;
       if (API_ORIGIN) {
         try {
           const res = await fetch(API_ORIGIN + '/api/employees', {
@@ -2711,14 +2772,26 @@
               role
             })
           });
-          if (res.ok) {
-            const d = await res.json();
-            if (d.employees) departmentEmployees = d.employees;
+          const d = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            showToast(d.error || 'Could not create employee');
+            return;
+          }
+          if (Array.isArray(d.employees) && d.employees.length) {
+            departmentEmployees = d.employees;
+            saveEmployeesToStorage();
+            savedViaApi = true;
           }
         } catch (e) {}
-      } else {
+      }
+      if (!savedViaApi) {
+        let maxNum = 100;
+        departmentEmployees.forEach(e => {
+          const m = String(e.empId || e.emp_id || '').match(/(\d+)/);
+          if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+        });
         departmentEmployees.unshift({
-          empId: `EMP-${100 + departmentEmployees.length + 1}`,
+          empId: `EMP-${maxNum + 1}`,
           fullName,
           username,
           pass,
@@ -2859,17 +2932,11 @@
       setInterval(() => {
         if (!state.isAuthenticated) return;
 
-        // 15-Second Periodic Cleanup Timer for 2-Minute (120s) Rolling Window
+        // Auto-Delete packets older than 1 Minute (60s)
         state.pruneCountdown -= 1;
         if (state.pruneCountdown <= 0) {
           runPeriodic15sPacketPrune();
           state.pruneCountdown = PRUNE_INTERVAL_SEC;
-        }
-        if (!state.backendConnected) {
-          const retBadge = document.getElementById('retentionTimerBadge');
-          if (retBadge) {
-            retBadge.textContent = `⏱️ 2m Buffer (${state.packets.length} pkts) • 15s Clean: ${state.pruneCountdown}s`;
-          }
         }
 
         pollRealBackendOrBrowser();
